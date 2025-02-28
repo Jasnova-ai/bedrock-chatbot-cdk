@@ -1,0 +1,90 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Send SMS API",
+    "version": "1.0.0",
+    "description": "API for sending an SMS using a Lambda function."
+  },
+  "paths": {
+    "/sendSms": {
+      "post": {
+        "summary": "Send an SMS",
+        "description": "Sends an SMS to a specified phone number with a personalized message.",
+        "operationId": "sendSms",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "phone": {
+                    "type": "string",
+                    "description": "The phone number to send the SMS to.",
+                    "example": "+1234567890"
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "The name of the recipient.",
+                    "example": "John Doe"
+                  }
+                },
+                "required": ["phone", "name"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SMS sent successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "SMS sent successfully"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input, missing required fields",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid input, missing required fields"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
