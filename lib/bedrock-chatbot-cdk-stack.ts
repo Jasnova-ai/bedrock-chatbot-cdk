@@ -352,6 +352,7 @@ Ensure responses are clear, concise, and follow these guidelines.
           "bedrock:Retrieve",
           "bedrock:InvokeModel",
           "bedrock:InvokeAgent",
+          "bedrock:InvokeModelWithResponseStream",
         ],
         resources: ["*"],
       })
