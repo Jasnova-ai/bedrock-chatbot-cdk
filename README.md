@@ -35,7 +35,7 @@ You have to use [lambda-stream library](https://github.com/astuyve/lambda-stream
 
 ### **Lambda Requirements**
 To support response streaming, the Lambda function must:
-- **Use a functional URL** for direct invocation.
+- **Use a functional URL** for direct invocation with security consequences.
 - Be configured with:  
   ```ts
   invokeMode: lambda.InvokeMode.RESPONSE_STREAM
@@ -46,7 +46,7 @@ To support response streaming, the Lambda function must:
 ---
 
 ## **Known Issues**
-Currently, some users report that **only trace chunks are returned, but no actual data chunks**.  
+Currently, some users report that **streaming is not working**.  
 Refer to the following discussions for potential solutions:
 - 🔗 [AWS RePost Issue](https://repost.aws/questions/QUgntPWmqxQDuXENGc97hyvQ/calling-invokeagentcommand-from-bedrock-agent-runtime-returns-only-trace-chunks-no-data-chunks-but-the-trace-chunks-contain-the-response-which-would-have-been-in-the-data-chunks-why)
 - 🔗 [Stack Overflow Discussion](https://stackoverflow.com/questions/79473938/aws-bedrock-agent-unable-to-get-invokeagent-to-stream-response-even-after-sett)
