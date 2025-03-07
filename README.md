@@ -50,3 +50,4 @@ Currently, some users report that **streaming is not working**.
 Refer to the following discussions for potential solutions:
 - 🔗 [AWS RePost Issue](https://repost.aws/questions/QUgntPWmqxQDuXENGc97hyvQ/calling-invokeagentcommand-from-bedrock-agent-runtime-returns-only-trace-chunks-no-data-chunks-but-the-trace-chunks-contain-the-response-which-would-have-been-in-the-data-chunks-why)
 - 🔗 [Stack Overflow Discussion](https://stackoverflow.com/questions/79473938/aws-bedrock-agent-unable-to-get-invokeagent-to-stream-response-even-after-sett)
+- 🔗 [Feature Request](https://github.com/boto/boto3/issues/4159)
