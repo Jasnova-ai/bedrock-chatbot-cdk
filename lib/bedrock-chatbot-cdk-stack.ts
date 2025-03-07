@@ -29,9 +29,11 @@ export class BedrockChatbotCdkStack extends Stack {
     // Configs
     // Update these values with your own values, for production, please refer these from the secret manager
     const configs = {
-      vpcId: "vpc-xxxx",
-      pineconeConnectionString: "https://xxxx.pinecone.io",
-      pineconeCredentialsSecretArn: "arn:aws:secretsmanager:us-east-1:xxxx:xxxx",
+      vpcId: "XXX",
+      pineconeConnectionString: "XXX",
+      pineconeCredentialsSecretArn: "XXX",
+      assistantName: "Jarrah",
+      assistantPrompt: "You are Jarrah, an intelligent voice assistant designed to help Alan. Your responses are concise and precise. Providing clear and accurate information without unnecessary verbosity. You don't use greeting words or phrases.",
     };
 
     // VPC
@@ -174,7 +176,7 @@ export class BedrockChatbotCdkStack extends Stack {
         timeout: Duration.minutes(10),
         description: "Bedrock knowledge base data ingestion",
         architecture: lambda.Architecture.ARM_64,
-        tracing: lambda.Tracing.ACTIVE,
+        tracing: lambda.Tracing.DISABLED,
         bundling: {
           minify: true,
           format: nodejsLambda.OutputFormat.CJS,
@@ -218,23 +220,7 @@ export class BedrockChatbotCdkStack extends Stack {
       name: `${uniqueNameLower}-agent`,
       description: "Bedrock agent for this service",
       foundationModel: bedrock.BedrockFoundationModel.AMAZON_NOVA_PRO_V1,
-      instruction: `This agent performs two main tasks:
-1. Answer FDA Drug Information Queries
-   - Respond to user questions related to FDA-approved drug information using the knowledge base.
-   - No information outside of the knowledge base should be used to answer questions.
-   - Format all drug-related responses in Markdown for better readability.  
-   - Do not provide sources, references, or external links in the responses.
-2. Send SMS Notifications
-   - If the user requests to receive an SMS, follow this process:  
-     a. Prompt the user for their full name in the format "First Last". Do not proceed unless both first and last names are provided.  
-     b. Ask for the user's U.S. phone number and validate its format.  
-     c. Once both the full name and a valid phone number are provided, trigger the 'sendSms' action.  
-     d. Confirm the action by responding with: "Message sent successfully."
-   - Restrict SMS sending to a maximum of 3 messages per session. Do not allow more than 3 SMS actions.
-Inform user you can only send test text messages or answer FDA approved drug information in the Pharmativity database.
-Anything else is outside of the scope of this agent should be responded with "Sorry, I can't help you with that.
-Ensure responses are clear, concise, and follow these guidelines.
-`,
+      instruction: configs.assistantPrompt,
       idleSessionTTL: Duration.minutes(30),
       knowledgeBases: [knowledgeBase],
       shouldPrepareAgent: true,
@@ -243,7 +229,7 @@ Ensure responses are clear, concise, and follow these guidelines.
     });
 
     const agentAlias = new bedrock.AgentAlias(this, "AgentAlias", {
-      aliasName: "AgentAlias",
+      aliasName: `AgentAlias-${Date.now()}`,
       agent,
       description: `${uniqueNameLower} agent alias`,
     });

@@ -2,15 +2,14 @@ import {
   BedrockAgentRuntimeClient,
   InvokeAgentCommand,
   InvokeAgentRequest,
-  ResponseStream,
 } from "@aws-sdk/client-bedrock-agent-runtime";
 import { APIGatewayProxyEventV2, Context } from "aws-lambda";
-import { streamifyResponse } from "lambda-stream";
+import { streamifyResponse, ResponseStream } from "lambda-stream";
 
 const client = new BedrockAgentRuntimeClient({});
 
 export const handler = streamifyResponse(
-  async (event: APIGatewayProxyEventV2, responseStream: NodeJS.WritableStream, context?: Context) => {
+  async (event: APIGatewayProxyEventV2, responseStream: ResponseStream, context?: Context) => {
     console.log("Received event:", event.body);
 
     const agentId = process.env.AGENT_ID;
@@ -70,11 +69,19 @@ export const handler = streamifyResponse(
         return;
       }
 
-      for await (const chunkEvent of response.completion as AsyncIterable<ResponseStream>) {
-        if (chunkEvent.chunk) {
-          const decodedChunk = new TextDecoder("utf-8").decode(chunkEvent.chunk.bytes);
-          console.log("Streaming chunk:", decodedChunk);
-          responseStream.write(decodedChunk);
+      responseStream.setContentType('text/plain')
+
+      // Debug
+      // for (let i = 0; i < 10; i++) {
+      //   responseStream.write(`Chunk ${i}\n`);
+      //   await new Promise((resolve) => setTimeout(resolve, 1000));
+      // }
+
+      for await (const event of response.completion) {
+        if (event.chunk?.bytes) {
+          const chunkData = new TextDecoder("utf-8").decode(event.chunk.bytes);
+          console.log("Chunk received:", chunkData);
+          responseStream.write(chunkData);
         }
       }
 
