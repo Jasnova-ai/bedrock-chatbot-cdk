@@ -2,127 +2,113 @@ import {
   BedrockAgentRuntimeClient,
   InvokeAgentCommand,
   InvokeAgentRequest,
-} from '@aws-sdk/client-bedrock-agent-runtime';
-import { APIGatewayProxyEventV2 } from 'aws-lambda';
+  InvokeAgentResponse,
+  ResponseStream,
+} from "@aws-sdk/client-bedrock-agent-runtime";
+import { Context, APIGatewayProxyEventV2 } from "aws-lambda";
+import { PassThrough } from "stream";
+import { once } from "events";
 
-// Initialize the Bedrock Agent Runtime client
-const client = new BedrockAgentRuntimeClient();
+const client = new BedrockAgentRuntimeClient({});
 
-// Main Lambda handler
-export const handler = async (event: APIGatewayProxyEventV2) => {
-  console.log('Received event:', { body: event.body });
+export const handler = async (event: APIGatewayProxyEventV2, context: Context) => {
+  console.log("Received event:", event.body);
 
   const agentId = process.env.AGENT_ID;
   const agentAliasId = process.env.AGENT_ALIAS_ID;
 
-  // Validate environment variables
   if (!agentId || !agentAliasId) {
-    console.error('Agent ID or Agent Alias ID is not configured.');
+    console.error("Agent ID or Agent Alias ID is not configured.");
     return {
       statusCode: 500,
-      body: JSON.stringify({
-        message: 'Agent ID or Agent Alias ID is not configured.',
-      }),
+      body: JSON.stringify({ message: "Agent ID or Agent Alias ID is not configured." }),
     };
   }
 
   try {
-    // Validate request body
     if (!event.body) {
-      console.error('Invalid input, missing request body');
+      console.error("Invalid input, missing request body");
       return {
         statusCode: 400,
-        body: JSON.stringify({
-          message: 'Invalid input, missing required fields',
-        }),
+        body: JSON.stringify({ message: "Error: Missing request body." }),
       };
     }
 
-    // Parse the request body
     const request = JSON.parse(event.body);
-    const { sessionAttributes, promptSessionAttributes, sessionId, prompt } =
-      request;
+    const { sessionAttributes, promptSessionAttributes, sessionId, prompt } = request;
 
-    // Validate required fields
     if (!prompt) {
-      console.error('Invalid input, missing required field: prompt');
+      console.error("Invalid input, missing required field: prompt");
       return {
         statusCode: 400,
-        body: JSON.stringify({
-          message: 'Invalid input, missing required field: prompt',
-        }),
+        body: JSON.stringify({ message: "Error: Missing required field: prompt." }),
       };
     }
 
-    let fullResponse = '';
-    try {
-      // Prepare the input for the Bedrock Agent
-      const input: InvokeAgentRequest = {
-        sessionState: {
-          sessionAttributes: sessionAttributes || {},
-          promptSessionAttributes: promptSessionAttributes || {},
-        },
-        agentId,
-        agentAliasId,
-        sessionId,
-        inputText: prompt,
-        streamingConfigurations: {
-          streamFinalResponse: true,
-        },
-        bedrockModelConfigurations: {
-          performanceConfig: {
-            latency: 'optimized',
-          },
-        },
+    const input: InvokeAgentRequest = {
+      sessionState: {
+        sessionAttributes: sessionAttributes || {},
+        promptSessionAttributes: promptSessionAttributes || {},
+      },
+      agentId,
+      agentAliasId,
+      sessionId,
+      inputText: prompt,
+      streamingConfigurations: {
+        streamFinalResponse: true,
+      },
+      bedrockModelConfigurations: {
+        performanceConfig: { latency: "standard" },
+      },
+    };
+
+    console.log("Invoking Bedrock Agent with input:", input);
+
+    const command = new InvokeAgentCommand(input);
+    const response: InvokeAgentResponse = await client.send(command);
+
+    if (!response.completion) {
+      console.error("Completion stream is undefined");
+      return {
+        statusCode: 500,
+        body: JSON.stringify({ message: "Error: Bedrock response is missing the completion stream." }),
       };
+    }
 
-      console.log('Invoking Bedrock Agent with input:', { input });
+    const stream = new PassThrough();
 
-      // Invoke the Bedrock Agent
-      const command = new InvokeAgentCommand(input);
-      const response = await client.send(command);
-
-      console.log(response);
-
-      // Collect all chunks from the completion stream
-      if (response.completion === undefined) {
-        throw new Error('Completion is undefined');
-      }
-
-      for await (const chunkEvent of response.completion) {
-        const chunk = chunkEvent.chunk;
-        if (chunk) {
-          const decodedResponse = new TextDecoder('utf-8').decode(chunk.bytes);
-          fullResponse += decodedResponse;
+    (async () => {
+      try {
+        for await (const chunkEvent of response.completion as AsyncIterable<ResponseStream>) {
+          if (chunkEvent.chunk) {
+            const decodedChunk = new TextDecoder("utf-8").decode(chunkEvent.chunk.bytes);
+            console.log("Streaming chunk:", decodedChunk);
+            stream.write(decodedChunk);
+          }
         }
+        stream.end();
+      } catch (error) {
+        console.error("Error streaming response:", error);
+        stream.write("Error streaming response");
+        stream.end();
       }
+    })();
 
-      console.log('Full response:', fullResponse);
-    } catch (error) {
-      console.error('Error processing response:', error);
-    }
+    await once(stream, "readable");
 
-    // Return the full response as JSON
     return {
       statusCode: 200,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "text/plain",
+        "Transfer-Encoding": "chunked",
       },
-      body: JSON.stringify({
-        message: fullResponse || 'SMS has been sent successfully.',
-      }),
+      body: stream.read().toString(),
     };
   } catch (error) {
-    console.error('Error invoking Bedrock Agent:', error);
+    console.error("Error invoking Bedrock Agent:", error);
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        message:
-          error instanceof Error ? error.message : 'Internal server error',
-      }),
+      body: JSON.stringify({ message: `Error: ${error instanceof Error ? error.message : "Internal server error"}` }),
     };
   }
 };
