@@ -50,7 +50,7 @@ export const handler = async (
       body[prop.name] = prop.value;
     }
 
-    const { phone, name } = body;
+    const { phone, name, message } = body;
 
     // Validate required fields
     if (!phone || !name) {
@@ -77,17 +77,16 @@ export const handler = async (
     }
 
     const firstName = nameParts[0];
-    const lastName = nameParts.slice(1).join(' '); // Handles middle names
-    const messageBody = `Hello ${firstName} ${lastName}, this is a test message from our service!`;
+    const lastName = nameParts.slice(1).join(' ');
 
     // Send SMS using Twilio
-    const message = await twilioClient.messages.create({
-      body: messageBody,
+    const sms = await twilioClient.messages.create({
+      body: message,
       from: FROM_NUMBER,
       to: phone,
     });
 
-    console.log('SMS sent successfully:', { messageSid: message.sid });
+    console.log('SMS sent successfully:', { messageSid: sms.sid });
 
     // Return success response
     return {
@@ -104,7 +103,7 @@ export const handler = async (
             responseState: 'SUCCESS',
             responseBody: {
               'application/json': {
-                message: 'SMS sent successfully',
+                message: `SMS sent successfully to ${firstName} ${lastName}: ${message}`,
               },
             },
           },
