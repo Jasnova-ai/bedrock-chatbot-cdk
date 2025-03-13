@@ -9,7 +9,7 @@
     "/sendSms": {
       "post": {
         "summary": "Send an SMS",
-        "description": "Sends an SMS to a specified phone number with a personalized message.",
+        "description": "Sends an SMS to a specified phone number with a custom message.",
         "operationId": "sendSms",
         "requestBody": {
           "required": true,
@@ -27,9 +27,14 @@
                     "type": "string",
                     "description": "The name of the recipient.",
                     "example": "John Doe"
+                  },
+                  "message": {
+                    "type": "string",
+                    "description": "A short SMS message.",
+                    "example": "Hello, just a reminder that you have a dinner date tonight!"
                   }
                 },
-                "required": ["phone", "name"]
+                "required": ["phone", "name", "message"]
               }
             }
           }
