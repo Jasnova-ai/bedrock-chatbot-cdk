@@ -29,11 +29,11 @@ export class BedrockChatbotCdkStack extends Stack {
     // Configs
     // Update these values with your own values, for production, please refer these from the secret manager
     const configs = {
-      vpcId: "vpc-07f3817b73fd01243",
+      vpcId: "[REPLACE ME]",
       pineconeConnectionString:
-        "https://bedrock-test-sd9prrx.svc.aped-4627-b74a.pinecone.io",
+        "[REPLACE ME]",
       pineconeCredentialsSecretArn:
-        "arn:aws:secretsmanager:us-east-1:954976315489:secret:/EVtivity/us-east-1/Dev/Bedrock/Pinecone-Yv9fEc",
+        "[REPLACE ME]",
       assistantName: "Jarrah",
       assistantPrompt:
         "You are Jarrah, an intelligent voice assistant designed to help Alan. Your responses are concise and precise. Providing clear and accurate information without unnecessary verbosity. You don't use greeting words or phrases.",
