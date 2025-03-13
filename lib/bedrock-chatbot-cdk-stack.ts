@@ -29,11 +29,14 @@ export class BedrockChatbotCdkStack extends Stack {
     // Configs
     // Update these values with your own values, for production, please refer these from the secret manager
     const configs = {
-      vpcId: "XXX",
-      pineconeConnectionString: "XXX",
-      pineconeCredentialsSecretArn: "XXX",
+      vpcId: "vpc-07f3817b73fd01243",
+      pineconeConnectionString:
+        "https://bedrock-test-sd9prrx.svc.aped-4627-b74a.pinecone.io",
+      pineconeCredentialsSecretArn:
+        "arn:aws:secretsmanager:us-east-1:954976315489:secret:/EVtivity/us-east-1/Dev/Bedrock/Pinecone-Yv9fEc",
       assistantName: "Jarrah",
-      assistantPrompt: "You are Jarrah, an intelligent voice assistant designed to help Alan. Your responses are concise and precise. Providing clear and accurate information without unnecessary verbosity. You don't use greeting words or phrases.",
+      assistantPrompt:
+        "You are Jarrah, an intelligent voice assistant designed to help Alan. Your responses are concise and precise. Providing clear and accurate information without unnecessary verbosity. You don't use greeting words or phrases.",
     };
 
     // VPC
@@ -129,7 +132,11 @@ export class BedrockChatbotCdkStack extends Stack {
     });
 
     new s3deploy.BucketDeployment(this, "DataSourceDeployment", {
-      sources: [s3deploy.Source.asset(path.join(__dirname, "../data/bedrock/knowledge-base"))],
+      sources: [
+        s3deploy.Source.asset(
+          path.join(__dirname, "../data/bedrock/knowledge-base")
+        ),
+      ],
       destinationBucket: dataBucket,
     });
 
@@ -227,14 +234,15 @@ export class BedrockChatbotCdkStack extends Stack {
       userInputEnabled: true,
       guardrail,
       memory: bedrock.Memory.sessionSummary({
-      maxRecentSessions: 10, // Keep the last 20 session summaries
-      memoryDurationDays: 20, // Retain summaries for 30 days
+        maxRecentSessions: 10, // Keep the last 20 session summaries
+        memoryDurationDays: 20, // Retain summaries for 30 days
       }),
     });
 
+    // Agent alias
     const agentAlias = new bedrock.AgentAlias(this, "AgentAlias", {
-      aliasName: `AgentAlias-${Date.now()}`,
       agent,
+      agentVersion: "1",
       description: `${uniqueNameLower} agent alias`,
     });
 
