@@ -226,6 +226,10 @@ export class BedrockChatbotCdkStack extends Stack {
       shouldPrepareAgent: true,
       userInputEnabled: true,
       guardrail,
+      memory: bedrock.Memory.sessionSummary({
+      maxRecentSessions: 10, // Keep the last 20 session summaries
+      memoryDurationDays: 20, // Retain summaries for 30 days
+      }),
     });
 
     const agentAlias = new bedrock.AgentAlias(this, "AgentAlias", {
